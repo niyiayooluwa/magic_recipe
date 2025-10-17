@@ -12,8 +12,9 @@
 import 'package:serverpod_client/serverpod_client.dart' as _i1;
 import 'dart:async' as _i2;
 import 'package:magic_recipe_client/src/protocol/greeting.dart' as _i3;
-import 'package:magic_recipe_client/src/protocol/recipes/recipe.dart' as _i4;
-import 'protocol.dart' as _i5;
+import 'package:magic_recipe_client/src/protocol/recipe.dart' as _i4;
+import 'package:serverpod_auth_client/serverpod_auth_client.dart' as _i5;
+import 'protocol.dart' as _i6;
 
 /// This is an example endpoint that returns a greeting message through
 /// its [hello] method.
@@ -51,12 +52,27 @@ class EndpointRecipes extends _i1.EndpointRef {
         {'ingredients': ingredients},
       );
 
-  _i2.Future<List<_i4.Recipe>> getRecipies() =>
+  _i2.Future<List<_i4.Recipe>> getRecipes() =>
       caller.callServerEndpoint<List<_i4.Recipe>>(
         'recipes',
-        'getRecipies',
+        'getRecipes',
         {},
       );
+
+  _i2.Future<void> deleteRecipe(int recipeId) =>
+      caller.callServerEndpoint<void>(
+        'recipes',
+        'deleteRecipe',
+        {'recipeId': recipeId},
+      );
+}
+
+class Modules {
+  Modules(Client client) {
+    auth = _i5.Caller(client);
+  }
+
+  late final _i5.Caller auth;
 }
 
 class Client extends _i1.ServerpodClientShared {
@@ -75,7 +91,7 @@ class Client extends _i1.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
           host,
-          _i5.Protocol(),
+          _i6.Protocol(),
           securityContext: securityContext,
           authenticationKeyManager: authenticationKeyManager,
           streamingConnectionTimeout: streamingConnectionTimeout,
@@ -87,11 +103,14 @@ class Client extends _i1.ServerpodClientShared {
         ) {
     greeting = EndpointGreeting(this);
     recipes = EndpointRecipes(this);
+    modules = Modules(this);
   }
 
   late final EndpointGreeting greeting;
 
   late final EndpointRecipes recipes;
+
+  late final Modules modules;
 
   @override
   Map<String, _i1.EndpointRef> get endpointRefLookup => {
@@ -100,5 +119,6 @@ class Client extends _i1.ServerpodClientShared {
       };
 
   @override
-  Map<String, _i1.ModuleEndpointCaller> get moduleLookup => {};
+  Map<String, _i1.ModuleEndpointCaller> get moduleLookup =>
+      {'auth': modules.auth};
 }

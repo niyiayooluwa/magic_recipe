@@ -2,4 +2,5 @@ greeting:
   - hello:
 recipes:
   - generateRecipe:
-  - getRecipies:
+  - getRecipes:
+  - deleteRecipe:

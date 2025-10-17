@@ -12,6 +12,7 @@
 import 'package:serverpod/serverpod.dart' as _i1;
 import '../greeting_endpoint.dart' as _i2;
 import '../recipes/recipes_endpoint.dart' as _i3;
+import 'package:serverpod_auth_server/serverpod_auth_server.dart' as _i4;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -76,17 +77,35 @@ class Endpoints extends _i1.EndpointDispatch {
             params['ingredients'],
           ),
         ),
-        'getRecipies': _i1.MethodConnector(
-          name: 'getRecipies',
+        'getRecipes': _i1.MethodConnector(
+          name: 'getRecipes',
           params: {},
           call: (
             _i1.Session session,
             Map<String, dynamic> params,
           ) async =>
-              (endpoints['recipes'] as _i3.RecipesEndpoint)
-                  .getRecipies(session),
+              (endpoints['recipes'] as _i3.RecipesEndpoint).getRecipes(session),
+        ),
+        'deleteRecipe': _i1.MethodConnector(
+          name: 'deleteRecipe',
+          params: {
+            'recipeId': _i1.ParameterDescription(
+              name: 'recipeId',
+              type: _i1.getType<int>(),
+              nullable: false,
+            )
+          },
+          call: (
+            _i1.Session session,
+            Map<String, dynamic> params,
+          ) async =>
+              (endpoints['recipes'] as _i3.RecipesEndpoint).deleteRecipe(
+            session,
+            params['recipeId'],
+          ),
         ),
       },
     );
+    modules['serverpod_auth'] = _i4.Endpoints()..initializeEndpoints(server);
   }
 }

@@ -1,6 +1,5 @@
-# magic_recipe_server/lib/src/recipes/recipe.spy.yaml
-#
-#
+# magic_recipe_server/lib/src/models/recipe.spy.yaml
+
 ### Our AI generated Recipe
 class: Recipe
 table: recipe
@@ -13,3 +12,5 @@ fields:
   date: DateTime
   ### The ingredients the user has passed in
   ingredients: String
+  ### If the recipe was deleted, we store the date it was deleted
+  deletedAt: DateTime?, scope=serverOnly
