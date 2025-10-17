@@ -13,13 +13,18 @@ var generateContent =
     (String apiKey, String prompt) async => (await GenerativeModel(
           model: 'gemini-2.5-flash',
           apiKey: apiKey,
-        ).generateContent([Content.text(prompt)]))
+        ).generateContent(
+          [Content.text(prompt)],
+        ))
             .text;
 
 /// This is the endpoint that will be used to generate a recipe using the
 /// Google Gemini API. It extends the Endpoint class and implements the
 /// generateRecipe method.
 class RecipesEndpoint extends Endpoint {
+  @override
+  bool get requireLogin => true;
+
   ///Pass in a string contaiing the ingredients and get a recipe back
   Future<Recipe> generateRecipe(Session session, String ingredients) async {
     // Serverpod automatically loads your passwords.yaml file and makes passwords
@@ -43,11 +48,14 @@ class RecipesEndpoint extends Endpoint {
       throw Exception('No response from Gemini API');
     }
 
+    final userId = (await session.authenticated)?.userId;
+
     final recipe = Recipe(
       author: 'Gemini',
       text: responseText,
       date: DateTime.now(),
       ingredients: ingredients,
+      userId: userId,
     );
 
     final recipeWithId = await Recipe.db.insertRow(session, recipe);
@@ -55,29 +63,28 @@ class RecipesEndpoint extends Endpoint {
     return recipeWithId;
   }
 
-  
-
   Future<List<Recipe>> getRecipes(Session session) async {
+    final userId = (await session.authenticated)?.userId;
     // Get all the recipes from the database, sorted by date.
     return Recipe.db.find(
       session,
       orderBy: (t) => t.date,
       // filter out the deleted recipes
-      where: (t) => t.deletedAt.equals(null),
+      where: (t) => t.deletedAt.equals(null) & t.userId.equals(userId),
       orderDescending: true,
     );
   }
 
-
   Future<void> deleteRecipe(Session session, int recipeId) async {
+    final userId = (await session.authenticated)?.userId;
     // Find the recipe in the database
     final recipe = await Recipe.db.findById(session, recipeId);
-    if (recipe == null) {
+    if (recipe == null || recipe.userId != userId) {
       throw Exception('Recipe not found');
     }
+    session.log('Deleting recipe with id: $recipeId');
     // Delete the recipe from the database
     recipe.deletedAt = DateTime.now();
     await Recipe.db.updateRow(session, recipe);
   }
-
 }
